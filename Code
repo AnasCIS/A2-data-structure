@@ -8,7 +8,6 @@ class Patient:
     def __str__(self):
         return f"Patient ID: {self.patient_id}, Name: {self.name}, Medical Condition: {self.medical_condition}, Admission Date: {self.admission_date}"
 
-
 class Doctor:
     def __init__(self, doctor_id, name, specialty):
         self.doctor_id = doctor_id
@@ -18,16 +17,16 @@ class Doctor:
     def __str__(self):
         return f"Doctor ID: {self.doctor_id}, Name: {self.name}, Specialty: {self.specialty}"
 
-
 class Prescription:
-    def __init__(self, patient_id, doctor_id, medication, dosage):
+    def __init__(self, prescription_id, patient_id, doctor_id, medication, dosage):
+        self.prescription_id = prescription_id
         self.patient_id = patient_id
         self.doctor_id = doctor_id
         self.medication = medication
         self.dosage = dosage
 
     def __str__(self):
-        return f"Patient ID: {self.patient_id}, Doctor ID: {self.doctor_id}, Medication: {self.medication}, Dosage: {self.dosage}"
+        return f"Prescription ID: {self.prescription_id}, Patient ID: {self.patient_id}, Doctor ID: {self.doctor_id}, Medication: {self.medication}, Dosage: {self.dosage}"
 
 
 class Hospital:
@@ -73,6 +72,9 @@ class PatientRecordManagementSystem:
     def add_patient(self, patient):
         self.patients[patient.patient_id] = patient
 
+    def add_doctor(self, doctor):
+        self.doctors[doctor.doctor_id] = doctor
+
     def update_patient(self, patient_id, **updates):
         if patient_id in self.patients:
             for key, value in updates.items():
@@ -89,10 +91,8 @@ class PatientRecordManagementSystem:
             raise ValueError("Patient not found")
 
     def schedule_appointment(self, patient_id, doctor_id):
-        if patient_id not in self.patients:
-            raise ValueError("Patient not found")
-        if doctor_id not in self.doctors:
-            raise ValueError("Doctor not found")
+        if patient_id not in self.patients or doctor_id not in self.doctors:
+            raise ValueError("Patient or Doctor not found")
         self.appointments.append((patient_id, doctor_id))
         self.consultation_queue.append(patient_id)
 
@@ -108,20 +108,14 @@ class PatientRecordManagementSystem:
             summary = {
                 'Patient ID': patient.patient_id,
                 'Name': patient.name,
-                'Date of Birth': patient.dob,
-                'Medical History': patient.medical_history,
-                'Current Condition': patient.current_condition,
-                'Appointments': [(appt[1], self.doctors[appt[1]].name, self.doctors[appt[1]].specialty)
-                                 for appt in self.appointments if appt[0] == patient_id],
-                'Prescriptions': [{'Prescription ID': pres.prescription_id,
-                                   'Medication': pres.medication,
-                                   'Dosage': pres.dosage}
-                                  for pres in self.prescriptions if pres.patient_id == patient_id]
+                'Medical Condition': patient.medical_condition,
+                'Admission Date': patient.admission_date,
+                'Appointments': [(appt[0], self.doctors[appt[1]].name, self.doctors[appt[1]].specialty) for appt in self.appointments if appt[0] == patient_id],
+                'Prescriptions': [str(pres) for pres in self.prescriptions if pres.patient_id == patient_id]
             }
             return summary
         else:
             return "Patient not found."
-
 def main_menu():
     print("\nWelcome to the Hospital Management System")
     print("1. Add Patient")
