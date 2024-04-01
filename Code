@@ -1,0 +1,180 @@
+class Patient:
+    def __init__(self, patient_id, name, medical_condition, admission_date):
+        self.patient_id = patient_id
+        self.name = name
+        self.medical_condition = medical_condition
+        self.admission_date = admission_date
+
+    def __str__(self):
+        return f"Patient ID: {self.patient_id}, Name: {self.name}, Medical Condition: {self.medical_condition}, Admission Date: {self.admission_date}"
+
+
+class Doctor:
+    def __init__(self, doctor_id, name, specialty):
+        self.doctor_id = doctor_id
+        self.name = name
+        self.specialty = specialty
+
+    def __str__(self):
+        return f"Doctor ID: {self.doctor_id}, Name: {self.name}, Specialty: {self.specialty}"
+
+
+class Prescription:
+    def __init__(self, patient_id, doctor_id, medication, dosage):
+        self.patient_id = patient_id
+        self.doctor_id = doctor_id
+        self.medication = medication
+        self.dosage = dosage
+
+    def __str__(self):
+        return f"Patient ID: {self.patient_id}, Doctor ID: {self.doctor_id}, Medication: {self.medication}, Dosage: {self.dosage}"
+
+
+class Hospital:
+    def __init__(self):
+        self.patients = []  # List to store patient records
+        self.doctors = []  # List to store doctor records
+        self.waiting_queue = []  # Queue to manage waiting patients
+        self.prescriptions = []  # List to store prescriptions
+
+    def add_patient(self, patient):
+        self.patients.append(patient)
+
+    def add_doctor(self, doctor):
+        self.doctors.append(doctor)
+
+    def schedule_appointment(self, patient, doctor):
+        self.waiting_queue.append((patient, doctor))
+
+    def update_patient_record(self, patient_id, new_record):
+        for patient in self.patients:
+            if patient.patient_id == patient_id:
+                patient = new_record
+                break
+
+    def issue_prescription(self, prescription):
+        self.prescriptions.append(prescription)
+
+    def remove_from_waiting_queue(self):
+        if self.waiting_queue:
+            return self.waiting_queue.pop(0)
+        else:
+            return None
+
+
+class PatientRecordManagementSystem:
+    def __init__(self):
+        self.patients = {}  # patient_id: Patient
+        self.doctors = {}  # doctor_id: Doctor
+        self.prescriptions = []  # List of Prescription
+        self.appointments = []  # List of (patient_id, doctor_id)
+        self.consultation_queue = []  # FIFO queue for patient_id
+
+    def add_patient(self, patient):
+        self.patients[patient.patient_id] = patient
+
+    def update_patient(self, patient_id, **updates):
+        if patient_id in self.patients:
+            for key, value in updates.items():
+                setattr(self.patients[patient_id], key, value)
+        else:
+            raise ValueError("Patient not found")
+
+    def remove_patient(self, patient_id):
+        if patient_id in self.patients:
+            del self.patients[patient_id]
+            # Remove patient from consultation queue if they're in it
+            self.consultation_queue = [p for p in self.consultation_queue if p != patient_id]
+        else:
+            raise ValueError("Patient not found")
+
+    def schedule_appointment(self, patient_id, doctor_id):
+        if patient_id not in self.patients:
+            raise ValueError("Patient not found")
+        if doctor_id not in self.doctors:
+            raise ValueError("Doctor not found")
+        self.appointments.append((patient_id, doctor_id))
+        self.consultation_queue.append(patient_id)
+
+    def issue_prescription(self, prescription):
+        self.prescriptions.append(prescription)
+
+    def find_patient(self, patient_id):
+        return self.patients.get(patient_id, None)
+
+    def display_patient_summary(self, patient_id):
+        patient = self.find_patient(patient_id)
+        if patient:
+            summary = {
+                'Patient ID': patient.patient_id,
+                'Name': patient.name,
+                'Date of Birth': patient.dob,
+                'Medical History': patient.medical_history,
+                'Current Condition': patient.current_condition,
+                'Appointments': [(appt[1], self.doctors[appt[1]].name, self.doctors[appt[1]].specialty)
+                                 for appt in self.appointments if appt[0] == patient_id],
+                'Prescriptions': [{'Prescription ID': pres.prescription_id,
+                                   'Medication': pres.medication,
+                                   'Dosage': pres.dosage}
+                                  for pres in self.prescriptions if pres.patient_id == patient_id]
+            }
+            return summary
+        else:
+            return "Patient not found."
+
+def main_menu():
+    print("\nWelcome to the Hospital Management System")
+    print("1. Add Patient")
+    print("2. Add Doctor")
+    print("3. Issue Prescription")
+    print("4. Display Patient Summary")
+    print("5. Exit")
+    choice = input("Please choose an option: ")
+    return choice
+
+def execute_choice(choice, system):
+    if choice == '1':
+        patient_id = input("Enter patient ID: ")
+        name = input("Enter patient name: ")
+        medical_condition = input("Enter medical condition: ")
+        admission_date = input("Enter admission date: ")
+        patient = Patient(patient_id, name, medical_condition, admission_date)
+        system.add_patient(patient)
+        print("Patient added successfully.")
+    elif choice == '2':
+        doctor_id = input("Enter doctor ID: ")
+        name = input("Enter doctor name: ")
+        specialty = input("Enter doctor specialty: ")
+        doctor = Doctor(doctor_id, name, specialty)
+        system.add_doctor(doctor)
+        print("Doctor added successfully.")
+    elif choice == '3':
+        prescription_id = input("Enter prescription ID: ")
+        patient_id = input("Enter patient ID: ")
+        doctor_id = input("Enter doctor ID: ")
+        medication = input("Enter medication: ")
+        dosage = input("Enter dosage: ")
+        prescription = Prescription(prescription_id, patient_id, doctor_id, medication, dosage)
+        system.issue_prescription(prescription)
+        print("Prescription issued successfully.")
+    elif choice == '4':
+        patient_id = input("Enter patient ID to display summary: ")
+        patient = system.find_patient(patient_id)
+        if patient:
+            print(f"Patient ID: {patient.patient_id}, Name: {patient.name}, Condition: {patient.medical_condition}, Admission: {patient.admission_date}")
+        else:
+            print("Patient not found.")
+    elif choice == '5':
+        print("Exiting the system.")
+        exit()
+    else:
+        print("Invalid choice, please try again.")
+
+def main():
+    system = PatientRecordManagementSystem()
+    while True:
+        choice = main_menu()
+        execute_choice(choice, system)
+
+if __name__ == "__main__":
+    main()
